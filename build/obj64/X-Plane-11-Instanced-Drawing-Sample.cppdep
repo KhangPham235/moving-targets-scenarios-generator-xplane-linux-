@@ -1,0 +1,8 @@
+build/obj64/X-Plane-11-Instanced-Drawing-Sample.o: \
+ X-Plane-11-Instanced-Drawing-Sample.cpp SDK/CHeaders/XPLM/XPLMInstance.h \
+ SDK/CHeaders/XPLM/XPLMDefs.h SDK/CHeaders/XPLM/XPLMScenery.h \
+ SDK/CHeaders/XPLM/XPLMDisplay.h SDK/CHeaders/XPLM/XPLMGraphics.h \
+ SDK/CHeaders/XPLM/XPLMMenus.h SDK/CHeaders/XPLM/XPLMUtilities.h \
+ SDK/CHeaders/XPLM/XPLMUtilities.h SDK/CHeaders/XPLM/XPLMPlugin.h \
+ SDK/CHeaders/XPLM/XPLMProcessing.h SDK/CHeaders/XPLM/XPLMDataAccess.h \
+ SDK/CHeaders/XPLM/test.h

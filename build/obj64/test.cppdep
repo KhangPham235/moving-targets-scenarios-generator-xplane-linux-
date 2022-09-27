@@ -1,0 +1,1 @@
+build/obj64/test.o: test.cpp SDK/CHeaders/XPLM/test.h
