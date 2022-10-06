@@ -4,12 +4,13 @@ TARGET		:= X-Plane-11-Instanced-Drawing-Sample
 
 SOURCES = \
 	X-Plane-11-Instanced-Drawing-Sample.cpp \
-	test.cpp
+	include/ControlCar.cpp	# khang edit
 LIBS = 
 
 INCLUDES = \
 	-I$(SRC_BASE)/SDK/CHeaders/XPLM \
-	-I$(SRC_BASE)/SDK/CHeaders/Widgets
+	-I$(SRC_BASE)/SDK/CHeaders/Widgets \
+	-I$(SRC_BASE)/include	# khang edit
 
 DEFINES = -DXPLM200=1 -DXPLM210=1 -DXPLM300=1 -DXPLM301=1 -DXPLM302=1 -DXPLM303=1 -DAPL=0 -DIBM=0 -DLIN=1
 

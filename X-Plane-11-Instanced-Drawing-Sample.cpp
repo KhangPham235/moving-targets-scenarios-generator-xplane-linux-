@@ -12,23 +12,10 @@
 #include <cstring>
 #include <math.h>
 
-#include "test.h"
-
+#include "ControlCar.h"
 #define PI 3.14159
 #define DEBUG_FLIGHT_LOCATION 0 // debug for getting flight location
 
-// private function
-bool goStraight(XPLMDrawInfo_t &infoCurrent, float step, bool &completed);
-void setDest(XPLMDrawInfo_t &infoDest);
-void setDest(float dest_x, float dest_y, float dest_z);
-void he_pt();
-void calcRoad(XPLMDrawInfo_t &home, float heading, float s);
-void setHome(XPLMDrawInfo_t &infoHome);
-void setHome(float dest_x, float dest_y, float dest_z);
-void setHeading(XPLMDrawInfo_t &infovehicle, float heading);
-void getPositionLocal(double Lat, double Lon, double Alt, XPLMDrawInfo_t &localPosition); // get local position from world position (lat,long,alt)
-void setPositionLocal_as_Dest(double Lat, double Lon, double Alt);
-void setPositionLocal_as_Home(double Lat, double Lon, double Alt);
 // user variable
 bool plugin_enable = false;
 bool check = false;   // check at destination?
@@ -40,23 +27,6 @@ bool checkB = false;
 bool checkC = false;
 bool checkD = false;
 
-
-// home
-float _home_x = -21508.93f;
-float _home_y = -109.40f;
-float _home_z = 30575.24f;
-
-// destination
-float _dest_x;
-float _dest_y;
-float _dest_z;
-
-// heso line
-float _u;
-float _w;
-float _v;
-float _k;
-float _k1;
 
 static XPLMDataRef x = NULL;
 static XPLMDataRef y = NULL;
@@ -114,7 +84,8 @@ XPLMObjectRef g_object = NULL;
 XPLMInstanceRef g_instance[3] = {NULL};
 
 XPLMDrawInfo_t		vehicle;
-
+XPLMProbeInfo_t probe;
+Vehicle car;
 static float tire;
 float myFlightLookCallBack(float timeLastCall, float totalTime, int counter, void * refcon);
 
@@ -161,7 +132,6 @@ static void menu_cb(
 	pitch = XPLMFindDataRef("sim/flightmodel/position/theta");
 	roll = XPLMFindDataRef("sim/flightmodel/position/phi");
 	
-	tire = add(2,3);
 	tire = 0.0;
 	tire += 10.0;
 	if(tire > 45.0) tire -= 90.0;
@@ -177,7 +147,7 @@ static void menu_cb(
 	//calcRoad(vehicle, 0.0, 1385.0);
 
 	// set home as wp 0
-	setHome(vehicle);
+	car.setHome(vehicle);
 	if(g_instance[0] || g_instance[1] || g_instance[2])
 	{
 		XPLMInstanceSetPosition(g_instance[2] ? g_instance[2] : (g_instance[1] ? g_instance[1] : g_instance[0]), &vehicle, &tire);
@@ -188,6 +158,7 @@ static void menu_cb(
 // function for callback to update new address of object instance
 float myFlightLookCallBack(float timeLastCall, float totalTime, int counter, void * refcon)
 {
+	car.set_rate_step(0.015);
 	if (totalTime > 30) {
 		if (plugin_enable) // vehicle will move when plugin_enable is Active 
 		{
@@ -198,10 +169,10 @@ float myFlightLookCallBack(float timeLastCall, float totalTime, int counter, voi
 				switch (wp)
 				{
 				case 0:  // at wp 0
-					setHeading(vehicle, 220.0f);
+					car.setHeading(vehicle, 220.0f);
 					//setDest(-20187.20f, vehicle.y, 30989.07f);
-					setPositionLocal_as_Dest(21.0390728, 105.4890007, 25.2);
-					goStraight(vehicle, 0.015, checkA);
+					car.setPositionLocal_as_Dest(21.0390728, 105.4890007, 25.2);
+					car.goStraight(vehicle, checkA);
 					if (checkA)
 					{
 						wp = 1;
@@ -209,48 +180,25 @@ float myFlightLookCallBack(float timeLastCall, float totalTime, int counter, voi
 					}
 					break;
 				case 1: // at wp 1
-					setHeading(vehicle, 40.0f);
+					car.setHeading(vehicle, 40.0f);
 					//setDest(-20123.54f, vehicle.y, 30763.81f);
-					setPositionLocal_as_Dest(21.0418841, 105.4915273, 29);
-					goStraight(vehicle, 0.015, checkB);
+					car.setPositionLocal_as_Dest(21.0418841, 105.4915273, 29);
+					car.goStraight(vehicle, checkB);
 					if (checkB) {
 						wp = 2;
 						checkB = false;
 					}
 					break;
 				case 2:
-					setHeading(vehicle, 220.0f);
+					car.setHeading(vehicle, 220.0f);
 					//setDest(-20123.54f, vehicle.y, 30763.81f);
-					setPositionLocal_as_Dest(21.0390728, 105.4890007, 25.2);
-					goStraight(vehicle, 0.015, checkC);
+					car.setPositionLocal_as_Dest(21.0390728, 105.4890007, 25.2);
+					car.goStraight(vehicle, checkC);
 					if (checkC) {
 						wp = 1;
 						checkC = false;
 					}
 					break;
-				// 	break;
-				// case 2: // at wp 2
-				// 	setHeading(vehicle, 287.0f);
-				// 	//setDest(-21445.3f, vehicle.y, 30350.10f);
-				// 	setPositionLocal_as_Dest(21.2230614, 105.7919347, 0);
-				// 	goStraight(vehicle, 0.5, checkC);
-				// 	if (checkC)
-				// 	{
-				// 		wp = 3;
-				// 		checkC = false;
-				// 	}
-				// 	break;
-				// case 3: // at wp 3
-				// 	setHeading(vehicle, 17.0f);
-				// 	//setDest(-21508.93f, vehicle.y,30575.24f);
-				// 	setPositionLocal_as_Dest(21.2252054, 105.7927193, 0);
-				// 	goStraight(vehicle, 0.1, checkD);
-				// 	if (checkD)
-				// 	{
-				// 		wp = 0;
-				// 		checkD = false;
-				// 	}
-				// 	break;
 				default: break;
 				}
 			}
@@ -278,9 +226,9 @@ float myFlightLookCallBack(float timeLastCall, float totalTime, int counter, voi
 		}
 
 
-		sprintf(MPD_Buffer[3], "heading = %0.3f", vehicle.heading);
-		sprintf(MPD_Buffer[4], "k = %0.3f", _k);
-		sprintf(MPD_Buffer[5], "roll = %0.3f", vehicle.roll);
+		//sprintf(MPD_Buffer[3], "heading = %0.3f", vehicle.heading);
+		//sprintf(MPD_Buffer[4], "k = %0.3f", _k);
+		//sprintf(MPD_Buffer[5], "roll = %0.3f", vehicle.roll);
 
 	}
 
@@ -397,140 +345,4 @@ int MotionPlatformDataHandleMouseClickCallback(
 	void *               inRefcon)
 {
 	return 1;
-}
-
-
-// Tk FUNCTION
-void setHome(XPLMDrawInfo_t &infoHome)
-{
-	_home_x = infoHome.x;
-	_home_y = infoHome.y;
-	_home_z = infoHome.z;
-}
-
-void setHome(float home_x, float home_y, float home_z)
-{
-	_home_x = home_x;
-	_home_y = home_y;
-	_home_z = home_z;
-}
-
-void he_pt()
-{
-	// he phuong trinh duong thang
-	_u = _dest_x - _home_x;
-	_v = _dest_z - _home_z;
-	_w = _dest_y - _home_y;
-	_k = _v / _u;
-	_k1 = _w / _u;
-}
-void setDest(XPLMDrawInfo_t &infoDest)
-{
-	_dest_x = infoDest.x;
-	_dest_y = infoDest.y;
-	_dest_z = infoDest.z;
-	
-	he_pt();
-
-}
-
-void setDest(float dest_x, float dest_y, float dest_z)
-{
-	if ((_dest_x == dest_x) && (_dest_y == dest_y) && (_dest_z == dest_z)) {
-		return;
-	}
-	_dest_x = dest_x;
-	_dest_y = dest_y;
-	_dest_z = dest_z;
-
-	he_pt();
-
-}
-
-bool goStraight(XPLMDrawInfo_t &infoCurrent, float step, bool &completed)
-{
-	float _step;
-	if (step == 0)
-	{
-		completed = false;
-		return false;
-	}
-
-	if (infoCurrent.heading < 270)
-	{
-		if ((_dest_z - infoCurrent.z) <= step && (_dest_x - infoCurrent.x) <= step)
-		{
-			completed = true;
-			setHome(infoCurrent); // set new home
-			return true;
-		}
-	}
-	else {
-		if ((infoCurrent.z - _dest_z) <= step && (infoCurrent.x - _dest_x) <= step)
-		{
-			completed = true;
-			setHome(infoCurrent); // set new home
-			return true;
-		}
-	}
-
-
-	he_pt();
-	if (_u < 0) _step = -step;
-	else if (_u > 0) _step = step;
-	else _step = 0;			// can be ignored
-
-
-	infoCurrent.x = infoCurrent.x + _step;
-	infoCurrent.z = _home_z - _k * _home_x + _k * infoCurrent.x;
-	float err = _dest_z - infoCurrent.z;
-	if (fabs(err) > step)
-	{
-		infoCurrent.y = _home_y - _k1 * _home_x + _k1 * infoCurrent.x;
-	}
-	
-	return true;
-}
-
-void calcRoad(XPLMDrawInfo_t &home, float heading, float s)
-{
-	he_pt();
-	float phi = atan(_k);
-	_dest_z = home.z + sin(phi)*s;
-	_dest_x = home.x + cos(phi)*s;
-}
-
-void setHeading(XPLMDrawInfo_t &infovehicle, float heading)
-{
-	infovehicle.heading = heading;
-}
-
-
-void getPositionLocal(double Lat, double Lon, double Alt,XPLMDrawInfo_t &localPosition)
-{
-	double value[3];
-
-	XPLMWorldToLocal(Lat, Lon, Alt,&value[0],&value[1],&value[2]);
-
-	localPosition.x = (float)value[0];
-	localPosition.y = (float)value[1];
-	localPosition.z = (float)value[2];
-}
-
-void setPositionLocal_as_Home(double Lat, double Lon, double Alt)
-{
-	double value[3];
-
-	XPLMWorldToLocal(Lat, Lon, Alt, &value[0], &value[1], &value[2]);
-
-	setHome((float)value[0], (float)value[1], (float)value[2]);
-}
-
-void setPositionLocal_as_Dest(double Lat, double Lon, double Alt)
-{
-	double value[3];
-
-	XPLMWorldToLocal(Lat, Lon, Alt, &value[0], &value[1], &value[2]);
-
-	setDest((float)value[0], (float)value[1], (float)value[2]);
 }
